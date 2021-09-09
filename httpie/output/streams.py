@@ -34,18 +34,21 @@ class BaseStream(metaclass=ABCMeta):
         msg: HTTPMessage,
         with_headers=True,
         with_body=True,
+        with_status=False,
         on_body_chunk_downloaded: Callable[[bytes], None] = None
     ):
         """
         :param msg: a :class:`models.HTTPMessage` subclass
         :param with_headers: if `True`, headers will be included
         :param with_body: if `True`, body will be included
+        :param with_status: if `True`, HTTP status from headers will be included
 
         """
-        assert with_headers or with_body
+        assert with_headers or with_body or with_status
         self.msg = msg
         self.with_headers = with_headers
         self.with_body = with_body
+        self.with_status = with_status
         self.on_body_chunk_downloaded = on_body_chunk_downloaded
 
     def get_headers(self) -> bytes:
@@ -58,7 +61,11 @@ class BaseStream(metaclass=ABCMeta):
 
     def __iter__(self) -> Iterable[bytes]:
         """Return an iterator over `self.msg`."""
-        if self.with_headers:
+        if self.with_status:
+            # The HTTP status is always the first line of the header
+            yield self.get_headers().split(b'\n', 2)[0]
+            yield b'\r\n\r\n'
+        elif self.with_headers:
             yield self.get_headers()
             yield b'\r\n\r\n'
 
@@ -69,7 +76,7 @@ class BaseStream(metaclass=ABCMeta):
                     if self.on_body_chunk_downloaded:
                         self.on_body_chunk_downloaded(chunk)
             except DataSuppressedError as e:
-                if self.with_headers:
+                if self.with_headers or self.with_status:
                     yield b'\n'
                 yield e.message
 

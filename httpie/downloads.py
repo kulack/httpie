@@ -270,6 +270,7 @@ class Downloader:
             msg=HTTPResponse(final_response),
             with_headers=False,
             with_body=True,
+            with_status=False,
             on_body_chunk_downloaded=self.chunk_downloaded,
             chunk_size=1024 * 8
         )

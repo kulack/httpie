@@ -14,7 +14,8 @@ from .argtypes import (
 from .constants import (
     DEFAULT_FORMAT_OPTIONS, OUTPUT_OPTIONS,
     OUTPUT_OPTIONS_DEFAULT, OUT_REQ_BODY, OUT_REQ_HEAD,
-    OUT_RESP_BODY, OUT_RESP_HEAD, PRETTY_MAP, PRETTY_STDOUT_TTY_ONLY,
+    OUT_RESP_BODY, OUT_RESP_HEAD, OUT_RESP_STATUS,
+    PRETTY_MAP, PRETTY_STDOUT_TTY_ONLY,
     RequestType, SEPARATOR_GROUP_ALL_ITEMS, SEPARATOR_PROXY,
     SORTED_FORMAT_OPTIONS_STRING,
     UNSORTED_FORMAT_OPTIONS_STRING,
@@ -350,9 +351,10 @@ output_options.add_argument(
         '{OUT_REQ_BODY}' request body
         '{OUT_RESP_HEAD}' response headers
         '{OUT_RESP_BODY}' response body
+        '{OUT_RESP_STATUS}' response HTTP status
 
     The default behaviour is '{OUTPUT_OPTIONS_DEFAULT}' (i.e., the response
-    headers and body is printed), if standard output is not redirected.
+    headers and body is printed) if standard output is not redirected.
     If the output is piped to another program or to a file, then only the
     response body is printed by default.
 

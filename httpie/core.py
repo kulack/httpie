@@ -9,7 +9,7 @@ from pygments import __version__ as pygments_version
 from requests import __version__ as requests_version
 
 from . import __version__ as httpie_version
-from .cli.constants import OUT_REQ_BODY, OUT_REQ_HEAD, OUT_RESP_BODY, OUT_RESP_HEAD
+from .cli.constants import OUT_REQ_BODY, OUT_REQ_HEAD, OUT_RESP_BODY, OUT_RESP_HEAD, OUT_RESP_STATUS
 from .client import collect_messages
 from .context import Environment
 from .downloads import Downloader
@@ -112,15 +112,17 @@ def main(args: List[Union[str, bytes]] = sys.argv, env=Environment()) -> ExitSta
 def get_output_options(
     args: argparse.Namespace,
     message: Union[requests.PreparedRequest, requests.Response]
-) -> Tuple[bool, bool]:
+) -> Tuple[bool, bool, bool]:
     return {
         requests.PreparedRequest: (
             OUT_REQ_HEAD in args.output_options,
             OUT_REQ_BODY in args.output_options,
+            False
         ),
         requests.Response: (
             OUT_RESP_HEAD in args.output_options,
             OUT_RESP_BODY in args.output_options,
+            OUT_RESP_STATUS in args.output_options
         ),
     }[type(message)]
 
@@ -168,9 +170,9 @@ def program(args: argparse.Namespace, env: Environment) -> ExitStatus:
         # Process messages as they’re generated
         for message in messages:
             is_request = isinstance(message, requests.PreparedRequest)
-            with_headers, with_body = get_output_options(args=args, message=message)
+            with_headers, with_body, with_status = get_output_options(args=args, message=message)
             do_write_body = with_body
-            if prev_with_body and (with_headers or with_body) and (force_separator or not env.stdout_isatty):
+            if prev_with_body and (with_headers or with_body or with_status) and (force_separator or not env.stdout_isatty):
                 # Separate after a previous message with body, if needed. See test_tokens.py.
                 separate()
             force_separator = False
@@ -187,7 +189,7 @@ def program(args: argparse.Namespace, env: Environment) -> ExitStatus:
                     exit_status = http_status_to_exit_status(http_status=message.status_code, follow=args.follow)
                     if exit_status != ExitStatus.SUCCESS and (not env.stdout_isatty or args.quiet):
                         env.log_error(f'HTTP {message.raw.status} {message.raw.reason}', level='warning')
-            write_message(requests_message=message, env=env, args=args, with_headers=with_headers,
+            write_message(requests_message=message, env=env, args=args, with_headers=with_headers, with_status=with_status,
                           with_body=do_write_body)
             prev_with_body = with_body
 

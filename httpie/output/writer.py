@@ -22,8 +22,9 @@ def write_message(
     args: argparse.Namespace,
     with_headers=False,
     with_body=False,
+    with_status=False
 ):
-    if not (with_body or with_headers):
+    if not (with_body or with_headers or with_status):
         return
     write_stream_kwargs = {
         'stream': build_output_stream_for_message(
@@ -32,6 +33,7 @@ def write_message(
             requests_message=requests_message,
             with_body=with_body,
             with_headers=with_headers,
+            with_status=with_status
         ),
         # NOTE: `env.stdout` will in fact be `stderr` with `--download`
         'outfile': env.stdout,
@@ -96,6 +98,7 @@ def build_output_stream_for_message(
     requests_message: Union[requests.PreparedRequest, requests.Response],
     with_headers: bool,
     with_body: bool,
+    with_status: bool
 ):
     stream_class, stream_kwargs = get_stream_type_and_kwargs(
         env=env,
@@ -109,6 +112,7 @@ def build_output_stream_for_message(
         msg=message_class(requests_message),
         with_headers=with_headers,
         with_body=with_body,
+        with_status=with_status,
         **stream_kwargs,
     )
     if (env.stdout_isatty and with_body

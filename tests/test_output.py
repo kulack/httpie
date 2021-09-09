@@ -243,6 +243,26 @@ class TestPrettyOptions:
         assert r.strip().count('\n') == 2
         assert COLOR not in r
 
+    def test_status_option(self, httpbin):
+        env = MockEnvironment(colors=256)
+        r = http('--print=s', '--pretty=format',
+                 'GET', httpbin.url + '/get', 'a=b',
+                 env=env)
+        # Tests that the JSON data is formatted.
+        assert "200 OK" in r
+        assert "a" not in r
+
+    def test_status_and_body_option(self, httpbin):
+        env = MockEnvironment(colors=256)
+        r = http('--print=sb', '--pretty=format',
+                 'GET', httpbin.url + '/get', 'a=b',
+                 env=env)
+        # separator between status code and formatted text, no header info
+        lines = r.strip().splitlines()
+        assert len(lines) > 3
+        assert "200 OK" in lines[0]
+        assert "" == lines[1]
+        assert "{" == lines[2]
 
 class TestLineEndings:
     """
